@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .container {
+            position: fixed;
+            z-index: 10;
+            text-align: center;
+            padding: 60px 40px;
+            max-width: 600px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .message {
+            color: #fff;
+            font-size: 2.5em;
+            margin: 30px 0;
+            font-style: italic;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.6);
+        }
+
+        .signature {
+            color: #ffc0cb;
+            font-size: 1.8em;
+            margin-top: 20px;
+            font-weight: 600;
+            text-shadow: 0 0 20px rgba(255, 192, 203, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+    <canvas id="fireworks"></canvas>
+    
+    <div class="container">
+        <div class="message">"Happy New Year my luvv"</div>
+        <div class="signature">- by Lhandy</div>
+    </div>
+
+    <script>
+        // STARS
+        const starsCanvas = document.getElementById('stars');
+        const starsCtx = starsCanvas.getContext('2d');
+        starsCanvas.width = window.innerWidth;
+        starsCanvas.height = window.innerHeight;
+
+        const stars = [];
+        for (let i = 0; i < 300; i++) {
+            stars.push({
+                x: Math.random() * starsCanvas.width,
+                y: Math.random() * starsCanvas.height,
+                radius: Math.random() * 1.5,
+                alpha: Math.random(),
+                twinkleSpeed: Math.random() * 0.02 + 0.005
+            });
+        }
+
+        function drawStars() {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(star => {
+                star.alpha += star.twinkleSpeed;
+                if (star.alpha > 1 || star.alpha < 0.2) {
+                    star.twinkleSpeed = -star.twinkleSpeed;
+                }
+                
+                starsCtx.save();
+                starsCtx.globalAlpha = star.alpha;
+                starsCtx.fillStyle = '#ffffff';
+                starsCtx.beginPath();
+                starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                starsCtx.fill();
+                starsCtx.restore();
+            });
+            requestAnimationFrame(drawStars);
+        }
+        drawStars();
+
+        // FIREWORKS
+        const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor(x, y, hue) {
+                this.x = x;
+                this.y = y;
+                this.hue = hue;
+                this.brightness = Math.random() * 30 + 50;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * 8 + 2;
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.gravity = 0.25;
+                this.friction = 0.96;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = this.alpha;
+                
+                // Outer glow
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 5);
+                gradient.addColorStop(0, `hsl(${this.hue}, 100%, ${this.brightness}%)`);
+                gradient.addColorStop(0.5, `hsl(${this.hue}, 100%, ${this.brightness - 20}%)`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Bright center
+                ctx.fillStyle = `hsl(${this.hue}, 100%, 90%)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        class Rocket {
+            constructor(x, targetY) {
+                this.x = x;
+                this.y = canvas.height;
+                this.targetY = targetY;
+                this.distanceToTarget = canvas.height - targetY;
+                this.distanceTraveled = 0;
+                this.hue = Math.random() * 360;
+                this.brightness = Math.random() * 30 + 50;
+                this.angle = Math.PI * 1.5;
+                this.speed = 15;
+                this.acceleration = 1.05;
+                this.trail = [];
+                this.maxTrail = 10;
+            }
+
+            update() {
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > this.maxTrail) {
+                    this.trail.shift();
+                }
+
+                this.speed *= this.acceleration;
+                const vx = Math.cos(this.angle) * this.speed;
+                const vy = Math.sin(this.angle) * this.speed;
+                
+                this.distanceTraveled = canvas.height - this.y;
+                this.x += vx;
+                this.y += vy;
+
+                return this.distanceTraveled >= this.distanceToTarget;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                
+                // Draw trail
+                this.trail.forEach((point, index) => {
+                    ctx.globalAlpha = (index / this.trail.length) * 0.8;
+                    const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, 3);
+                    gradient.addColorStop(0, `hsl(${this.hue}, 100%, ${this.brightness}%)`);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Draw rocket head
+                ctx.globalAlpha = 1;
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 8);
+                gradient.addColorStop(0, `hsl(${this.hue}, 100%, 90%)`);
+                gradient.addColorStop(0.5, `hsl(${this.hue}, 100%, ${this.brightness}%)`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        class Firework {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.hue = Math.random() * 360;
+                this.particles = [];
+                this.exploded = false;
+                this.rocket = new Rocket(x, y);
+            }
+
+            explode() {
+                this.exploded = true;
+                const particleCount = 150;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    this.particles.push(new Particle(this.rocket.x, this.rocket.y, this.hue));
+                }
+            }
+
+            update() {
+                if (!this.exploded) {
+                    const reachedTarget = this.rocket.update();
+                    if (reachedTarget) {
+                        this.explode();
+                    }
+                } else {
+                    this.particles = this.particles.filter(p => {
+                        p.update();
+                        return p.alpha > 0;
+                    });
+                }
+            }
+
+            draw() {
+                if (!this.exploded) {
+                    this.rocket.draw();
+                } else {
+                    this.particles.forEach(p => p.draw());
+                }
+            }
+
+            isDone() {
+                return this.exploded && this.particles.length === 0;
+            }
+        }
+
+        const fireworks = [];
+
+        function launchFirework() {
+            const x = Math.random() * canvas.width * 0.6 + canvas.width * 0.2;
+            const y = Math.random() * canvas.height * 0.3 + 100;
+            fireworks.push(new Firework(x, y));
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(9, 10, 15, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            fireworks.forEach((firework, i) => {
+                firework.update();
+                firework.draw();
+                
+                if (firework.isDone()) {
+                    fireworks.splice(i, 1);
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+        setInterval(launchFirework, 800);
+
+        canvas.addEventListener('click', (e) => {
+            fireworks.push(new Firework(e.clientX, e.clientY));
+        });
+    </script>
+</body>
+</html>
